@@ -1,0 +1,38 @@
+{# templates/emails/news_statistics.html.twig #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Weekly News Statistics</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .period { color: #7f8c8d; font-style: italic; margin-bottom: 20px; }
+        ol { margin-left: 20px; }
+        li { margin-bottom: 10px; }
+        .title { font-weight: bold; }
+        .views { color: #2980b9; }
+        footer { margin-top: 30px; font-size: 12px; color: #7f8c8d; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Top 10 Most Viewed News</h1>
+    <p class="period">Period: {{ period_start|date('Y-m-d') }} to {{ period_end|date('Y-m-d') }}</p>
+
+    <ol>
+        {% for item in news_items %}
+            <li>
+                <span class="title">{{ item.title }}</span> -
+                <span class="views">{{ item.views }} views</span>
+            </li>
+        {% endfor %}
+    </ol>
+
+    <footer>
+        This is an automated message from your news system. Please do not reply to this email.
+    </footer>
+</div>
+</body>
+</html>

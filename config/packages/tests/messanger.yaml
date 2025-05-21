@@ -1,0 +1,5 @@
+# config/packages/test/messenger.yaml
+framework:
+    messenger:
+        # Disable messenger completely in tests
+        enabled: false

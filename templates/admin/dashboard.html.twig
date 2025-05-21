@@ -1,0 +1,203 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Dashboard - Admin{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="mb-4">Admin Dashboard</h1>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card text-white bg-info">
+                        <div class="card-header">
+                            <i class="bi bi-newspaper"></i> Total News
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4">{{ totalNews }}</h2>
+                            <p class="card-text">Published articles</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-success">
+                        <div class="card-header">
+                            <i class="bi bi-tags"></i> Total Categories
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4">{{ totalCategories }}</h2>
+                            <p class="card-text">Active categories</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-primary">
+                        <div class="card-header">
+                            <i class="bi bi-chat-dots"></i> Total Comments
+                        </div>
+                        <div class="card-body">
+                            <h2 class="display-4">{{ totalComments|default(0) }}</h2>
+                            <p class="card-text">
+                                <small>{{ commentsToday|default(0) }} today • {{ commentsThisWeek|default(0) }} this week</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <a href="{{ path('app_admin_news_new') }}" class="btn btn-primary btn-lg w-100">
+                                        <i class="bi bi-plus-circle"></i><br>
+                                        Add News
+                                    </a>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="{{ path('app_admin_category_new') }}" class="btn btn-success btn-lg w-100">
+                                        <i class="bi bi-tag"></i><br>
+                                        Add Category
+                                    </a>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="{{ path('app_admin_news_index') }}" class="btn btn-info btn-lg w-100">
+                                        <i class="bi bi-list"></i><br>
+                                        Manage News
+                                    </a>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="{{ path('app_admin_category_index') }}" class="btn btn-warning btn-lg w-100">
+                                        <i class="bi bi-folder"></i><br>
+                                        Manage Categories
+                                    </a>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="#" class="btn btn-secondary btn-lg w-100">
+                                        <i class="bi bi-chat-dots"></i><br>
+                                        All Comments
+                                    </a>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="#" class="btn btn-outline-primary btn-lg w-100">
+                                        <i class="bi bi-graph-up"></i><br>
+                                        Comment Stats
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Latest News -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Latest News</h5>
+                            <a href="{{ path('app_admin_news_index') }}" class="btn btn-sm btn-outline-primary">
+                                View All
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if latestNews is empty %}
+                                <p class="text-muted">No news articles yet.</p>
+                            {% else %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Published</th>
+                                            <th>Views</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for news in latestNews %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if news.hasImage %}
+                                                            <img src="{{ asset('uploads/news/' ~ news.imageName) | imagine_filter('news_medium') }}"
+                                                                 alt="{{ news.title }}"
+                                                                 class="img-thumbnail me-2"
+                                                                 style="width: 40px; height: 40px; object-fit: cover;">
+                                                        {% endif %}
+                                                        <a href="{{ path('app_news_show', {id: news.id}) }}" target="_blank">
+                                                            {{ news.title|length > 50 ? news.title|slice(0, 50) ~ '...' : news.title }}
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                                <td>{{ news.insertDate|date('M d, Y') }}</td>
+                                                <td>{{ news.views }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{{ path('app_news_show', {id: news.id}) }}"
+                                                           class="btn btn-sm btn-outline-secondary"
+                                                           target="_blank"
+                                                           title="View">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                        <a href="{{ path('app_admin_news_edit', {id: news.id}) }}"
+                                                           class="btn btn-sm btn-outline-primary"
+                                                           title="Edit">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <form method="post"
+                                                              action="{{ path('app_admin_news_delete', {id: news.id}) }}"
+                                                              style="display: inline;"
+                                                              onsubmit="return confirm('Are you sure you want to delete this article? This action cannot be undone.')">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ news.id) }}">
+                                                            <button class="btn btn-sm btn-outline-danger" type="submit" title="Delete">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Recent Comments</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recentComments is defined and recentComments is not empty %}
+                                {% for comment in recentComments %}
+                                    <div class="comment-preview border-bottom pb-2 mb-2">
+                                        <div class="d-flex justify-content-between">
+                                            <strong class="text-primary">{{ comment.author }}</strong>
+                                            <small class="text-muted">{{ comment.createdAt|date('M d') }}</small>
+                                        </div>
+                                        <p class="text-muted small mb-0">
+                                            {{ comment.content|length > 80 ? comment.content|slice(0, 80) ~ '...' : comment.content }}
+                                        </p>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No recent comments.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

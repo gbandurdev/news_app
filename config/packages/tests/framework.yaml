@@ -1,0 +1,8 @@
+# config/packages/test/framework.yaml
+framework:
+    test: true
+    # Disable the profiler for tests
+    profiler:
+        enabled: false
+    session:
+        storage_factory_id: session.storage.factory.mock_file

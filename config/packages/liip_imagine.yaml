@@ -1,0 +1,44 @@
+# config/packages/liip_imagine.yaml
+liip_imagine:
+    driver: "gd"
+    loaders:
+        default:
+            filesystem:
+                data_root: "%kernel.project_dir%/public"
+    twig:
+        mode: lazy
+
+    resolvers:
+        default:
+            web_path: ~
+
+    filter_sets:
+        cache: ~
+
+        news_thumbnail:
+            quality: 90
+            filters:
+                thumbnail:
+                    size: [400, 300]
+                    mode: outbound # equivalent to 'crop'
+
+        news_medium:
+            quality: 90
+            filters:
+                thumbnail:
+                    size: [800, 600]
+                    mode: inset # equivalent to 'contain'
+
+        news_large:
+            quality: 95
+            filters:
+                thumbnail:
+                    size: [1200, 800]
+                    mode: inset
+
+        news_hero:
+            quality: 95
+            filters:
+                thumbnail:
+                    size: [1920, 1080]
+                    mode: outbound # equivalent to 'cover'

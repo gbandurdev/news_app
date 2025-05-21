@@ -1,0 +1,185 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}Add Comment - {{ news.title|slice(0, 50) }}...{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Home</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{{ path('app_news_show', {id: news.id}) }}">{{ news.title|slice(0, 40) }}...</a>
+                </li>
+                <li class="breadcrumb-item active">Add Comment</li>
+            </ol>
+        </nav>
+
+        <h1 class="mb-4">Add Your Comment</h1>
+
+        <!-- Article Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Commenting on:</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if news.hasImage %}
+                        <div class="col-md-3">
+                            <img src="{{ asset('uploads/news_images/' ~ news.imageUrl('thumbnail')) }}"
+                                 class="img-fluid rounded"
+                                 alt="{{ news.title }}">
+                        </div>
+                        <div class="col-md-9">
+                    {% else %}
+                        <div class="col-12">
+                    {% endif %}
+                            <h6>{{ news.title }}</h6>
+                            <p class="text-muted">{{ news.shortDescription }}</p>
+                            <small class="text-muted">
+                                Published {{ news.insertDate|date('M d, Y') }} •
+                                {{ news.views }} views •
+                                {{ news.comments|length }} comments
+                            </small>
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comment Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Share Your Thoughts</h5>
+            </div>
+            <div class="card-body">
+                {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}}) }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.author, null, {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.author, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.author) }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_label(form.email, null, {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.email) }}
+                                {{ form_help(form.email) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.content, null, {'label_attr': {'class': 'form-label'}}) }}
+                        {{ form_widget(form.content, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.content) }}
+                        <div class="form-text">
+                            <span id="comment-counter">0</span> / 2000 characters
+                        </div>
+                    </div>
+
+                    <!-- Comment Guidelines -->
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> Comment Guidelines</h6>
+                        <ul class="mb-0">
+                            <li>Be respectful and constructive in your comments</li>
+                            <li>Stay on topic and relevant to the article</li>
+                            <li>No spam, advertising, or self-promotion</li>
+                            <li>Use appropriate language suitable for all audiences</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ path('app_news_show', {id: news.id}) }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Article
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submit-comment">
+                            <i class="bi bi-send"></i> Submit Comment
+                        </button>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+
+        <!-- Recent Comments on This Article -->
+        {% if news.comments|length > 0 %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Comments</h5>
+                </div>
+                <div class="card-body">
+                    {% for comment in news.comments|slice(0, 3) %}
+                        <div class="comment-preview mb-3 pb-3 {{ not loop.last ? 'border-bottom' : '' }}">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong>{{ comment.author }}</strong>
+                                <small class="text-muted">{{ comment.createdAt|date('M d, Y g:i A') }}</small>
+                            </div>
+                            <p class="text-muted mb-0">
+                                {{ comment.content|length > 150 ? comment.content|slice(0, 150) ~ '...' : comment.content }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                    {% if news.comments|length > 3 %}
+                        <div class="text-center">
+                            <a href="{{ path('app_news_show', {id: news.id}) }}#comments" class="btn btn-outline-primary btn-sm">
+                                View All {{ news.comments|length }} Comments
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter
+    const commentTextarea = document.querySelector('#comment_content');
+    const counter = document.querySelector('#comment-counter');
+    const submitButton = document.querySelector('#submit-comment');
+
+    function updateCounter() {
+        const length = commentTextarea.value.length;
+        counter.textContent = length;
+
+        if (length > 2000) {
+            counter.parentElement.classList.add('text-danger');
+            submitButton.disabled = true;
+        } else if (length > 1800) {
+            counter.parentElement.classList.add('text-warning');
+            counter.parentElement.classList.remove('text-danger');
+            submitButton.disabled = false;
+        } else {
+            counter.parentElement.classList.remove('text-danger', 'text-warning');
+            submitButton.disabled = false;
+        }
+    }
+
+    commentTextarea.addEventListener('input', updateCounter);
+    updateCounter(); // Initial count
+
+    // Form validation
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+
+    // Auto-resize textarea
+    commentTextarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+});
+</script>
+{% endblock %}

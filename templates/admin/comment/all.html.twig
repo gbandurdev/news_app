@@ -1,0 +1,103 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}All Comments - Admin{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>All Comments</h1>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary" onclick="filterComments('all')">
+                        All
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="filterComments('recent')">
+                        Recent
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="filterComments('old')">
+                        Older
+                    </button>
+                </div>
+            </div>
+
+            {% if comments is empty %}
+                <div class="alert alert-info">
+                    <h4>No comments found</h4>
+                    <p>There are currently no comments in the system.</p>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body">
+                        {% for comment in comments %}
+                            <div class="comment-item-global border rounded p-3 mb-3"
+                                 data-date="{{ comment.createdAt|date('Y-m-d') }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <strong class="text-primary">{{ comment.author }}</strong>
+                                                <span class="text-muted ms-2">on</span>
+                                                <a href="{{ path('app_news_show', {id: comment.news.id}) }}"
+                                                   class="fw-bold text-decoration-none"
+                                                   target="_blank">
+                                                    {{ comment.news.title|length > 50 ? comment.news.title|slice(0, 50) ~ '...' : comment.news.title }}
+                                                </a>
+                                            </div>
+                                            <small class="text-muted">{{ comment.createdAt|date('M d, Y g:i A') }}</small>
+                                        </div>
+                                        <p class="mb-1">{{ comment.content|slice(0, 200) }}{% if comment.content|length > 200 %}...{% endif %}</p>
+                                        <small class="text-muted">
+                                            {{ comment.content|length }} characters •
+                                            <a href="{{ path('app_admin_comment_index', {id: comment.news.id}) }}">
+                                                Manage article comments
+                                            </a>
+                                        </small>
+                                    </div>
+                                    <div class="ms-3">
+                                        <form method="post"
+                                              action="{{ path('app_admin_comment_delete', {id: comment.id}) }}"
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Are you sure you want to delete this comment?')">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comment.id) }}">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit" title="Delete Comment">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function filterComments(filter) {
+            const comments = document.querySelectorAll('.comment-item-global');
+            const now = new Date();
+            const weekAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+
+            comments.forEach(comment => {
+                const commentDate = new Date(comment.dataset.date);
+                let shouldShow = true;
+
+                switch(filter) {
+                    case 'recent':
+                        shouldShow = commentDate >= weekAgo;
+                        break;
+                    case 'old':
+                        shouldShow = commentDate < weekAgo;
+                        break;
+                    case 'all':
+                    default:
+                        shouldShow = true;
+                        break;
+                }
+
+                comment.style.display = shouldShow ? '' : 'none';
+            });
+        }
+    </script>
+{% endblock %}

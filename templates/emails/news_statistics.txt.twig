@@ -1,0 +1,12 @@
+{# templates/emails/news_statistics.txt.twig #}
+Top 10 Most Viewed News
+======================
+
+Period: {{ period_start|date('Y-m-d') }} to {{ period_end|date('Y-m-d') }}
+
+{% for item in news_items %}
+{{ loop.index }}. {{ item.title }} - {{ item.views }} views
+{% endfor %}
+
+---
+This is an automated message from your news system. Please do not reply to this email.

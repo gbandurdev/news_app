@@ -1,0 +1,264 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ news.title }} - News Portal{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/news-detail.css') }}">
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Home</a></li>
+                    {% if news.categories|length > 0 %}
+                        <li class="breadcrumb-item">
+                            <a href="{{ path('app_category_show', {id: news.categories.first.id}) }}">
+                                {{ news.categories.first.title }}
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="breadcrumb-item active">{{ news.title|slice(0, 50) }}...</li>
+                </ol>
+            </nav>
+
+            <article class="news-article">
+                <header class="mb-4">
+                    <h1>{{ news.title }}</h1>
+
+                    <div class="article-meta d-flex flex-wrap align-items-center text-muted mb-3">
+                    <span class="me-3">
+                        <i class="bi bi-calendar-event"></i>
+                        {{ news.insertDate|date('F d, Y \\a\\t g:i A') }}
+                    </span>
+                        <span class="me-3">
+                        <i class="bi bi-eye"></i>
+                        {{ news.views }} views
+                    </span>
+                        <span class="me-3">
+                        <i class="bi bi-chat-dots"></i>
+                        <span id="comment-count">{{ news.comments|length }}</span> comments
+                    </span>
+                        {% if news.categories|length > 0 %}
+                            <span>
+                            <i class="bi bi-tags"></i>
+                            Categories:
+                            {% for category in news.categories %}
+                                <a href="{{ path('app_category_show', {id: category.id}) }}"
+                                   class="badge bg-secondary text-decoration-none">
+                                    {{ category.title }}
+                                </a>
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {% if news.hasImage %}
+                        <div class="news-image-container mb-3" style="height: 450px; overflow: hidden;">
+                            <img
+                                src="{{ asset('uploads/news/' ~ news.imageName) | imagine_filter('news_hero') }}"
+                                alt="{{ news.imageAltText }}"
+                                style="
+                                width: 100%;
+                                height: 100%;
+                                object-fit: cover;
+                                object-position: center 25%;
+                            "
+                            />
+                        </div>
+                    {% endif %}
+
+                    <div class="article-summary bg-light p-3 rounded mb-4">
+                        <h5>Summary</h5>
+                        <p class="mb-0">{{ news.shortDescription }}</p>
+                    </div>
+                </header>
+
+                <div class="article-content mb-5">
+                    {{ news.content|nl2br }}
+                </div>
+            </article>
+
+            <!-- Social Share -->
+            <div class="social-share my-4">
+                <h6>Share this article:</h6>
+                <div class="btn-group" role="group">
+                    <a href="https://twitter.com/intent/tweet?text={{ news.title|url_encode }}&url={{ url('app_news_show', {id: news.id})|url_encode }}"
+                       class="btn btn-outline-info btn-sm" target="_blank">
+                        <i class="bi bi-twitter"></i> Twitter
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ url('app_news_show', {id: news.id})|url_encode }}"
+                       class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="bi bi-facebook"></i> Facebook
+                    </a>
+                    <a href="mailto:?subject={{ news.title|url_encode }}&body={{ url('app_news_show', {id: news.id})|url_encode }}"
+                       class="btn btn-outline-dark btn-sm">
+                        <i class="bi bi-envelope"></i> Email
+                    </a>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <section class="comments-section mt-5" id="comments">
+                <div class="card shadow-sm">
+                    <!-- Comments Header -->
+                    <div class="comments-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0">
+                                <i class="bi bi-chat-dots"></i>
+                                Comments (<span id="comment-count-display">{{ news.comments|length }}</span>)
+                            </h3>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" id="toggle-comment-form">
+                                    <i class="bi bi-plus-circle"></i> Add Comment
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#commentModal">
+                                    <i class="bi bi-chat-square"></i> Quick Comment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inline Comment Form (Initially Hidden) -->
+                    <div class="comment-form" id="comment-form">
+                        <div class="px-4">
+                            <h5 class="mb-3"><i class="bi bi-pen"></i> Share Your Thoughts</h5>
+                            <form id="inline-comment-form" action="{{ path('app_comment_create_ajax', {id: news.id}) }}" method="POST">
+                                <input type="hidden" name="_token" value="{{ csrf_token('comment') }}">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="author" class="form-label">Your Name *</label>
+                                            <input type="text" class="form-control" id="author" name="author" required maxlength="255" placeholder="Enter your name">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">Email (Optional)</label>
+                                            <input type="email" class="form-control" id="email" name="email" placeholder="your.email@example.com">
+                                            <div class="form-text">We will not share your email address</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="content" class="form-label">Comment *</label>
+                                    <textarea class="form-control" id="content" name="content" rows="4" required maxlength="2000" placeholder="Write your comment here..."></textarea>
+                                    <div class="form-text d-flex justify-content-between">
+                                        <span>Please be respectful and constructive</span>
+                                        <span><span id="inline-char-count">0</span> / 2000 characters</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button type="button" class="btn btn-secondary" id="cancel-comment">
+                                        <i class="bi bi-x-circle"></i> Cancel
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="submit-inline-comment">
+                                        <i class="bi bi-send"></i> Submit Comment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Comments List -->
+                    <div class="comments-body" id="comments-list">
+                        {% if news.comments is empty %}
+                            <div class="text-center py-5" id="no-comments">
+                                <i class="bi bi-chat-dots display-1 text-muted"></i>
+                                <h5 class="text-muted mt-3">No comments yet</h5>
+                                <p class="text-muted">Be the first to share your thoughts on this article!</p>
+                            </div>
+                        {% else %}
+                            <div class="comments-wrapper">
+                                {% for comment in news.comments|reverse %}
+                                    <div class="comment-item p-3 mb-3" id="comment-{{ comment.id }}">
+                                        <div class="d-flex">
+                                            <div class="comment-avatar me-3">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                                     style="width: 45px; height: 45px;">
+                                                    <i class="bi bi-person"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="mb-0 text-primary">{{ comment.author }}</h6>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-clock me-1"></i>
+                                                        {{ comment.createdAt|date('M d, Y \\a\\t g:i A') }}
+                                                    </small>
+                                                </div>
+                                                <div class="comment-content">
+                                                    <p class="mb-0">{{ comment.content|nl2br }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Comment Modal -->
+    <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="commentModalLabel">
+                        <i class="bi bi-chat-square"></i> Add Your Comment
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Commenting on:</h6>
+                        <p class="fw-bold">{{ news.title }}</p>
+                    </div>
+                    <form id="modal-comment-form" action="{{ path('app_comment_create_ajax', {id: news.id}) }}" method="POST">
+                        <input type="hidden" name="_token" value="{{ csrf_token('comment') }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="modal-author" class="form-label">Your Name *</label>
+                                    <input type="text" class="form-control" id="modal-author" name="author" required maxlength="255" placeholder="Enter your name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="modal-email" class="form-label">Email (Optional)</label>
+                                    <input type="email" class="form-control" id="modal-email" name="email" placeholder="your.email@example.com">
+                                    <div class="form-text">We will not share your email address</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modal-content" class="form-label">Comment *</label>
+                            <textarea class="form-control" id="modal-content" name="content" rows="5" required maxlength="2000" placeholder="Write your comment here..."></textarea>
+                            <div class="form-text d-flex justify-content-between">
+                                <span>Please be respectful and constructive</span>
+                                <span><span id="modal-char-count">0</span> / 2000 characters</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="submit" form="modal-comment-form" class="btn btn-primary" id="submit-modal-comment">
+                        <i class="bi bi-send"></i> Submit Comment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('js/news-detail.js') }}"></script>
+{% endblock %}

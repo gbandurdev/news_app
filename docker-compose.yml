@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+    # PHP Application
+    app:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        volumes:
+            - .:/var/www
+        depends_on:
+            - database
+        networks:
+            - symfony_network
+        environment:
+            APP_ENV: dev
+            APP_DEBUG: 1
+            DATABASE_URL: "postgresql://symfony:symfony@database:5432/symfony?serverVersion=15&charset=utf8"
+            TEST_DATABASE_URL: "postgresql://symfony:symfony@test-database:5432/symfony_test?serverVersion=15&charset=utf8"
+            POSTGRES_PASSWORD: symfony
+            LOAD_FIXTURES: "true"  # Set to "true" to load fixtures automatically
+
+    # Nginx Service
+    nginx:
+        build:
+            context: .
+            dockerfile: docker/nginx/Dockerfile
+        ports:
+            - "8080:80"  # Changed from 80 to 8080
+        volumes:
+            - .:/var/www
+        depends_on:
+            - app
+        networks:
+            - symfony_network
+
+    # PostgreSQL Database
+    database:
+        image: postgres:15
+        environment:
+            POSTGRES_DB: symfony
+            POSTGRES_USER: symfony
+            POSTGRES_PASSWORD: symfony
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        networks:
+            - symfony_network
+
+    # PostgreSQL Test Database
+    test-database:
+        image: postgres:15
+        environment:
+            POSTGRES_DB: symfony_test
+            POSTGRES_USER: symfony
+            POSTGRES_PASSWORD: symfony
+        ports:
+            - "5433:5432"
+        networks:
+            - symfony_network
+
+    # Mailer (if needed)
+#    mailer:
+#        image: axllent/mailpit
+#        ports:
+#            - "1025:1025"
+#            - "8025:8025"
+#        networks:
+#            - symfony_network
+
+networks:
+    symfony_network:
+
+volumes:
+    postgres_data:
