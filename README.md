@@ -60,6 +60,10 @@ symfony serve
 ```
 
 ## Section 3: Testing & Future Plans
+To Run Tests
+```bash
+./bin/phpunit
+```
 To send statistics (Assuming using Mailtrap or something else)
 ```bash
  docker compose exec app php bin/console  app:send-top-news-statistis
